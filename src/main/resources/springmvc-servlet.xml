@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/mvc
+       http://www.springframework.org/schema/mvc/spring-mvc.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd
+">
+    <!--    开启注解-->
+    <mvc:annotation-driven/>
+    <!--    扫描添加注解的类-->
+    <context:component-scan base-package="cn.myjava.ssmDemo.controller"/>
+    <!--配置视图解析器 /WEB-INF/jsp/index.jsp  -->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/WEB-INF/jsp/"/>
+        <property name="suffix" value=".jsp"/>
+    </bean>
+    <!--静态资源-->
+    <mvc:resources mapping="/statics/**" location="/statics/"/>
+    <!--    全局异常的配置-->
+    <bean class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+        <property name="exceptionMappings">
+            <props>
+                <prop key="java.lang.RuntimeException">error</prop>
+            </props>
+        </property>
+    </bean>
+    <mvc:annotation-driven>
+        <mvc:message-converters>
+            <!--  配置 Fastjson 支持 -->
+            <bean class="com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter">
+                <property name="supportedMediaTypes">
+                    <list>
+                        <value>text/html;charset=UTF-8</value>
+                        <value>application/json</value>
+                    </list>
+                </property>
+                <property name="fastJsonConfig" ref="fastJsonConfig"/>
+            </bean>
+        </mvc:message-converters>
+    </mvc:annotation-driven>
+    <bean name="fastJsonConfig" class="com.alibaba.fastjson.support.config.FastJsonConfig">
+        <property name="serializerFeatures">
+            <list>
+                <value>WriteMapNullValue</value> <!--  是否输出值为 null 的字段 , 默认为 false-->
+                <value>WriteMapNullValue</value> <!--  是否输出值为 null 的字段 , 默认为 false-->
+                <value>WriteNullListAsEmpty</value> <!-- List 字段如果为 null, 输出为 [], 而非 null-->
+                <value>WriteNullStringAsEmpty</value> <!--  字符类型字段如果为 null, 输出为 ”“, 而非 null-->
+            </list>
+        </property>
+    </bean>
+    <!--   配置拦截器-->
+    <mvc:interceptors>
+        <mvc:interceptor>
+            <!--            所有请求都拦截-->
+            <!--            <mvc:mapping path="/**"/>-->
+            <!--            需要拦截处理的url-->
+            <mvc:mapping path="/student/getStuList"/>
+            <mvc:mapping path="/student/add.html"/>
+            <mvc:mapping path="/student/getStuBySid/{sid}"/>
+            <mvc:mapping path="/student/update"/>
+            <mvc:mapping path="/student/deleteStuBySid/{sid}"/>
+            <!--  不需要拦截处理的url， 默认是不拦截的，这里不设置也不拦截  -->
+            <mvc:exclude-mapping path="/login"/>
+            <mvc:exclude-mapping path="/logout"/>
+            <mvc:exclude-mapping path="/statics/**"/>
+            <bean class="cn.myjava.ssmDemo.interceptor.LoginInterceptor"/>
+        </mvc:interceptor>
+    </mvc:interceptors>
+    <!--    文件上传解析器MultipartResolver-->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <property name="maxUploadSize" value="5000000"/>
+        <property name="defaultEncoding" value="UTF-8"/>
+    </bean>
+</beans>
+

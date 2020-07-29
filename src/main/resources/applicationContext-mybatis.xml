@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/aop
+       http://www.springframework.org/schema/aop/spring-aop.xsd
+       http://www.springframework.org/schema/tx
+       http://www.springframework.org/schema/tx/spring-tx.xsd
+       http://www.springframework.org/schema/task
+       http://www.springframework.org/schema/task/spring-task.xsd
+">
+    <context:component-scan base-package="cn.myjava.ssmDemo.service"/>
+    <!--    加载属性文件,属性文件的属性要是jdbc.driver这样的样式才可以-->
+    <context:property-placeholder location="classpath:jdbc.properties"/>
+    <!--配置数据源-->
+    <!--    配置数据源-->
+    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">
+        <property name="driverClassName" value="${jdbc.driver}"/>
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+        <!--        最大连接数-->
+        <property name="maxActive" value="${jdbc.maxActive}"/>
+        <!--        最大空闲数-->
+        <property name="maxIdle" value="${jdbc.maxIdle}"/>
+        <!--        最小空闲数-->
+        <property name="minIdle" value="${jdbc.minIdle}"/>
+        <!--        初始化-->
+        <property name="initialSize" value="${jdbc.initialSize}"/>
+    </bean>
+    <!--AOP事务管理-->
+    <!--    实例化事务管理器-->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+    <!--    配置事务通知-->
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+        <tx:attributes>
+            <tx:method name="add*" rollback-for="Exception"/>
+            <tx:method name="update*" rollback-for="Exception"/>
+            <tx:method name="delete*" rollback-for="Exception"/>
+        </tx:attributes>
+    </tx:advice>
+    <aop:config>
+        <aop:pointcut id="point" expression="execution(* cn.myjava.ssmDemo.service..*.*(..))"/>
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="point"/>
+    </aop:config>
+    <!--AOP处理事务结束-->
+    <!--mybatis的sqlSessionFactory配置-->
+    <bean id="sqlSessionFactoryBean" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="configLocation" value="classpath:mybatis-config.xml"/>
+        <!--指定Mapper.xml-->
+        <property name="mapperLocations" value="classpath:mapper/student/*.xml"/>
+    </bean>
+    <!--扫描mapper-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="cn.myjava.ssmDemo.dao"/>
+    </bean>
+    <context:component-scan base-package="cn.myjava.ssmDemo.task"/>
+    <!--    开启定时任务注解-->
+    <task:annotation-driven/>
+</beans>

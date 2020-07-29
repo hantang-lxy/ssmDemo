@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.myjava.ssmDemo.dao.student.StudentMapper">
+    <cache eviction="FIFO" flushInterval="600000" readOnly="true" size="512"/>
+    <resultMap id="studentResultMap" type="student">
+        <result property="sName" column="sName"/>
+        <collection property="courses" ofType="Course" resultMap="courseResultMap"/>
+    </resultMap>
+    <resultMap id="courseResultMap" type="course">
+        <result property="cName" column="cName"/>
+    </resultMap>
+    <insert id="insertStudent" parameterType="student">
+        INSERT INTO student (sid,sName,sAge,sSex,sPwd,sHead) VALUE (#{sid},#{sName},#{sAge},#{sSex},#{sPwd},#{sHead})
+    </insert>
+    <update id="updateStudent" parameterType="student">
+        UPDATE student SET sName=#{sName},sAge=#{sAge},sSex=#{sSex} WHERE sid=#{sid}
+    </update>
+    <delete id="deleteStudent" parameterType="string">
+        DELETE FROM student WHERE sid=#{sid}
+    </delete>
+    <select id="selectStudentList" resultMap="studentResultMap">
+        SELECT s.sName,r.cName FROM student s LEFT OUTER JOIN ( SELECT sc.sid , c.cName FROM sc INNER JOIN course c  ON sc.cid = c.cid) r ON s.sid=r.sid
+    </select>
+    <select id="selectStudentCountByName" parameterType="string" resultType="int">
+        SELECT count(sid) FROM student where 1
+        <if test="name != '' and name != null">
+            AND sName like concat('%',#{name},'%')
+        </if>
+    </select>
+    <select id="selectStudentListByName" resultType="student">
+        SELECT * FROM student where 1
+        <if test="name != '' and name != null">
+            AND sName like concat('%',#{name},'%')
+        </if>
+        ORDER BY sid LIMIT #{pageInfo.index},#{pageInfo.pageSize}
+    </select>
+    <select id="selectStudentAllListByName" parameterType="string" resultType="student">
+        SELECT * FROM student where 1
+        <if test="name != '' and name != null">
+            AND sName like concat('%',#{name},'%')
+        </if>
+    </select>
+    <select id="selectStudentBySid" parameterType="string" resultType="student">
+        SELECT * FROM student where sid= #{sid}
+    </select>
+    <select id="selectStudentBySNameAndSPwd" resultType="student">
+        SELECT sName,sAge,sSex,sid FROM  student where sid=#{sid} AND sPwd=#{sPwd}
+    </select>
+
+</mapper>
